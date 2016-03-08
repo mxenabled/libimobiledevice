@@ -48,6 +48,7 @@ enum cmd_mode {
 };
 
 static int quit_flag = 0;
+static char* quit_str_search = NULL;
 
 static void on_signal(int sig)
 {
@@ -114,6 +115,9 @@ static debugserver_error_t debugserver_client_handle_response(debugserver_client
 		debugserver_decode_string(r + 1, strlen(r) - 1, &o);
 		printf("%s", o);
 		fflush(stdout);
+		if (quit_str_search && strstr(o, quit_str_search)!=NULL) {
+			quit_flag++;
+		}
 		if (o != NULL) {
 			free(o);
 			o = NULL;
@@ -190,6 +194,7 @@ static void print_usage(int argc, char **argv)
 	printf("  -e, --env NAME=VALUE\tset environment variable NAME to VALUE\n");
 	printf("  -u, --udid UDID\ttarget specific device by its 40-digit device UDID\n");
 	printf("  -d, --debug\t\tenable communication debugging\n");
+	printf("  -q, --quit [string]\tsearch for an output string, then quit\n");
 	printf("  -h, --help\t\tprints usage information\n");
 	printf("\n");
 	printf("Homepage: <" PACKAGE_URL ">\n");
@@ -259,6 +264,10 @@ int main(int argc, char *argv[])
 			print_usage(argc, argv);
 			res = 0;
 			goto cleanup;
+		} else if (!strcmp(argv[i], "-q") || !strcmp(argv[i], "--quit")) {
+			i++;
+			quit_str_search = argv[i];
+			continue;
 		} else if (!strcmp(argv[i], "run")) {
 			cmd = CMD_RUN;
 
