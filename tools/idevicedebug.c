@@ -117,6 +117,7 @@ static debugserver_error_t debugserver_client_handle_response(debugserver_client
 		fflush(stdout);
 		if (quit_str_search && strstr(o, quit_str_search)!=NULL) {
 			quit_flag++;
+			exit(0);
 		}
 		if (o != NULL) {
 			free(o);
@@ -461,6 +462,11 @@ int main(int argc, char *argv[])
 			dres = debugserver_client_send_command(debugserver_client, command, &response);
 			debugserver_command_free(command);
 			command = NULL;
+
+			if (quit_str_search && !strcmp(quit_str_search, "")) {
+				quit_flag++;
+				exit(0);
+			}
 
 			/* main loop which is parsing/handling packets during the run */
 			debug_info("Entering run loop...");
