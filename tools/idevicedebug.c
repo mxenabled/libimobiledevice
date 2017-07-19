@@ -48,6 +48,8 @@ enum cmd_mode {
 };
 
 static int quit_flag = 0;
+static int force_quit = 0;
+static int launch_status = 1;
 static char* quit_str_search = NULL;
 
 static void on_signal(int sig)
@@ -196,6 +198,7 @@ static void print_usage(int argc, char **argv)
 	printf("  -u, --udid UDID\ttarget specific device by its 40-digit device UDID\n");
 	printf("  -d, --debug\t\tenable communication debugging\n");
 	printf("  -q, --quit [string]\tsearch for an output string, then quit\n");
+	printf("  -f, --forcequit\tquits immediately after verifying the launch occurred\n");
 	printf("  -h, --help\t\tprints usage information\n");
 	printf("\n");
 	printf("Homepage: <" PACKAGE_URL ">\n");
@@ -268,6 +271,9 @@ int main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-q") || !strcmp(argv[i], "--quit")) {
 			i++;
 			quit_str_search = argv[i];
+			continue;
+		} else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--forcequit")) {
+			force_quit++;
 			continue;
 		} else if (!strcmp(argv[i], "run")) {
 			cmd = CMD_RUN;
@@ -435,8 +441,15 @@ int main(int argc, char *argv[])
 					debugserver_client_handle_response(debugserver_client, &response, 0);
 					goto cleanup;
 				}
+				launch_status--;
 				free(response);
 				response = NULL;
+			}
+
+			/* Exit immediately if intent is only to launch app */
+			if (force_quit) {
+				quit_flag++;
+				exit(launch_status);
 			}
 
 			/* set thread */
